@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    "customManagers:githubActionsVersions"
+  ],
+  "timezone": "Europe/Berlin",
+  "semanticCommitType": "feat",
+  "customManagers": [
+    {
+      "description": "qmk_firmware tag that build.sh and CI overlay keyboards/ onto",
+      "customType": "regex",
+      "managerFilePatterns": ["/^QMK_VERSION$/"],
+      "matchStrings": ["^(?<currentValue>\\d+\\.\\d+\\.\\d+)\\s*$"],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "qmk/qmk_firmware",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "QMK patch releases are merges of master without breaking changes: merge once CI builds",
+      "matchDepNames": ["qmk/qmk_firmware"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "QMK minor releases are the quarterly breaking-change releases: review by hand",
+      "matchDepNames": ["qmk/qmk_firmware"],
+      "matchUpdateTypes": ["minor", "major"],
+      "automerge": false,
+      "prBodyNotes": [
+        "This is a QMK breaking-change release. Check the \"Changes Requiring User Action\" section in https://github.com/qmk/qmk_firmware/tree/master/docs/ChangeLog for anything touching bastardkb/charybdis, pointing devices, tap-hold or the keycodes used in the jigfox keymap before merging."
+      ]
+    }
+  ]
+}

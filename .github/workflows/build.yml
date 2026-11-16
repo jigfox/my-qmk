@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # renovate: datasource=pypi depName=qmk
+  QMK_CLI_VERSION: 1.2.0
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -39,7 +43,7 @@ jobs:
         run: |
           [ -d .qmk_firmware/.git ] || git clone --depth 1 --branch "${{ steps.qmk.outputs.version }}" \
             https://github.com/qmk/qmk_firmware.git .qmk_firmware
-          pip install qmk -r .qmk_firmware/requirements.txt
+          pip install "qmk==$QMK_CLI_VERSION" -r .qmk_firmware/requirements.txt
 
       - run: ./build.sh
 
