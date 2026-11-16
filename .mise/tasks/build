@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Overlay keyboards/ onto qmk_firmware and build the firmware into build/"
+#MISE depends=["setup"]
+set -euo pipefail
+cd "$MISE_PROJECT_ROOT"
+kb=bastardkb/charybdis/3x5/splinky_3
+km=jigfox
+
+# A stale overlay must not survive a pin change.
+rm -rf "$QMK_DIR/keyboards/$kb" "$QMK_DIR/keyboards/bastardkb/charybdis/3x5/keymaps/$km"
+cp -R keyboards/. "$QMK_DIR/keyboards/"
+
+(cd "$QMK_DIR" && QMK_HOME="$QMK_DIR" qmk compile -j 0 -kb "$kb" -km "$km")
+
+mkdir -p build
+cp "$QMK_DIR/${kb//\//_}_$km.uf2" build/
+echo "built: build/${kb//\//_}_$km.uf2"

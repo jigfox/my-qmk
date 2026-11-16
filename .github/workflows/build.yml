@@ -10,25 +10,14 @@ on:
 permissions:
   contents: read
 
-env:
-  # renovate: datasource=pypi depName=qmk
-  QMK_CLI_VERSION: 1.2.0
-
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install the ARM toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi rsync
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+      # Same tools as locally (mise.toml): Arm GCC, GNU make, Python, uv, picotool.
+      - uses: jdx/mise-action@v5
 
       - id: qmk
         run: echo "version=$(tr -d '[:space:]' < QMK_VERSION)" >> "$GITHUB_OUTPUT"
@@ -39,13 +28,7 @@ jobs:
           path: .qmk_firmware
           key: qmk-firmware-${{ steps.qmk.outputs.version }}
 
-      - name: Fetch qmk_firmware and the qmk CLI
-        run: |
-          [ -d .qmk_firmware/.git ] || git clone --depth 1 --branch "${{ steps.qmk.outputs.version }}" \
-            https://github.com/qmk/qmk_firmware.git .qmk_firmware
-          pip install "qmk==$QMK_CLI_VERSION" -r .qmk_firmware/requirements.txt
-
-      - run: ./build.sh
+      - run: mise run build
 
       - uses: actions/upload-artifact@v7
         with:

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Fetch qmk_firmware at the tag in QMK_VERSION and install the qmk CLI into .venv"
+set -euo pipefail
+cd "$MISE_PROJECT_ROOT"
+tag=$(tr -d '[:space:]' < QMK_VERSION)
+
+if [ ! -d "$QMK_DIR/.git" ]; then
+    git clone -q --depth 1 --branch "$tag" https://github.com/qmk/qmk_firmware.git "$QMK_DIR"
+elif ! git -C "$QMK_DIR" rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+    git -C "$QMK_DIR" fetch -q --depth 1 origin tag "$tag" --no-tags
+fi
+git -C "$QMK_DIR" checkout -q "$tag"
+git -C "$QMK_DIR" submodule update -q --init --recursive --depth 1
+
+uv pip install -q -r requirements.txt -r "$QMK_DIR/requirements.txt"

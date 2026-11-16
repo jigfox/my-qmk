@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Remove build/ and QMK's build output (keeps the qmk_firmware checkout)"
+set -euo pipefail
+cd "$MISE_PROJECT_ROOT"
+rm -rf build "$QMK_DIR/.build"

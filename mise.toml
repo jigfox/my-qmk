@@ -1,0 +1,28 @@
+[tools]
+python = "3.13"
+# Creates .venv and installs the qmk CLI (requirements.txt) into it.
+uv = "0.13.8"
+# GNU make 4 (macOS only ships 3.81, too old for QMK).
+make = "4.4.1"
+
+# Arm's official toolchain (GCC + newlib), the same on macOS and in CI.
+[tools."http:arm-none-eabi-gcc"]
+version = "14.3.rel1"
+bin_path = "bin"
+strip_components = 1
+
+[tools."http:arm-none-eabi-gcc".platforms]
+macos-arm64 = { url = "https://developer.arm.com/-/media/Files/downloads/gnu/{{version}}/binrel/arm-gnu-toolchain-{{version}}-darwin-arm64-arm-none-eabi.tar.xz" }
+linux-x64 = { url = "https://developer.arm.com/-/media/Files/downloads/gnu/{{version}}/binrel/arm-gnu-toolchain-{{version}}-x86_64-arm-none-eabi.tar.xz" }
+
+# picotool from Raspberry Pi's prebuilt SDK tools, for `mise run flash`.
+[tools."github:raspberrypi/pico-sdk-tools"]
+version = "2.3.1-0"
+
+[tools."github:raspberrypi/pico-sdk-tools".platforms]
+macos-arm64 = { asset_pattern = "picotool-*-mac.zip" }
+linux-x64 = { asset_pattern = "picotool-*-x86_64-lin.tar.gz" }
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+QMK_DIR = "{{config_root}}/.qmk_firmware"

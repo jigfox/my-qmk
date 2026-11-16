@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Build, then flash both halves with picotool, one after the other"
+#MISE depends=["build"]
+#USAGE flag "--half <half>" default="both" help="Flash only one half" {
+#USAGE   choices "both" "right" "left"
+#USAGE }
+set -euo pipefail
+cd "$MISE_PROJECT_ROOT"
+uf2=build/bastardkb_charybdis_3x5_splinky_3_jigfox.uf2
+
+case "${usage_half:-both}" in
+    both) halves=(right left) ;;
+    *) halves=("$usage_half") ;;
+esac
+
+for half in "${halves[@]}"; do
+    echo "==> Plug in the $half half by USB and double-tap its reset button."
+    # Both halves run the same firmware; picotool only writes the program
+    # range, so each half keeps its own settings in the EEPROM sector.
+    until picotool info >/dev/null 2>&1; do sleep 0.5; done
+    picotool load -v -x "$uf2"
+    echo "==> $half half flashed and restarted."
+    # Wait until it has left BOOTSEL, so the next half isn't mistaken for it.
+    while picotool info >/dev/null 2>&1; do sleep 0.5; done
+done
+echo "Done. Use the right half as the USB side (MASTER_RIGHT)."
