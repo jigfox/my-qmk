@@ -27,3 +27,8 @@ Pushing a tag `v*` also publishes a GitHub release with
 `charybdis-3x5-splinky3-jigfox-<tag>.uf2` attached:
 
     git tag v1.0.0 && git push origin v1.0.0
+
+## License
+
+GPL-2.0-or-later, like QMK; see `LICENSE`. The keyboard and keymap files keep their
+original copyright headers.
