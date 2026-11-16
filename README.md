@@ -1,4 +1,4 @@
-# charybdis-qmk
+# my-qmk
 
 Keymap and keyboard definition for a BastardKB Charybdis Nano (3x5, shield v2) with
 Splinky v3 (RP2040) controllers. Upstream QMK dropped the `splinky_3` target, so this repo
@@ -18,3 +18,12 @@ Needs `qmk` on PATH (`pipx install qmk`), an arm-none-eabi toolchain and GNU mak
 
 Flash by double-tapping reset on each half and copying the file to the RPI-RP2 drive.
 The right half is the USB side (`MASTER_RIGHT`).
+
+## CI and releases
+
+`.github/workflows/build.yml` builds on every push and pull request (Ubuntu's
+`gcc-arm-none-eabi`) and keeps the `.uf2` as the `firmware` artifact of the run.
+Pushing a tag `v*` also publishes a GitHub release with
+`charybdis-3x5-splinky3-jigfox-<tag>.uf2` attached:
+
+    git tag v1.0.0 && git push origin v1.0.0

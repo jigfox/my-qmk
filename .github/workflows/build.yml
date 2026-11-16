@@ -1,0 +1,71 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the ARM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi rsync
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - id: qmk
+        run: echo "version=$(tr -d '[:space:]' < QMK_VERSION)" >> "$GITHUB_OUTPUT"
+
+      # qmk_firmware plus submodules is large; reuse it per pinned version.
+      - uses: actions/cache@v6
+        with:
+          path: .qmk_firmware
+          key: qmk-firmware-${{ steps.qmk.outputs.version }}
+
+      - name: Fetch qmk_firmware and the qmk CLI
+        run: |
+          [ -d .qmk_firmware/.git ] || git clone --depth 1 --branch "${{ steps.qmk.outputs.version }}" \
+            https://github.com/qmk/qmk_firmware.git .qmk_firmware
+          pip install qmk -r .qmk_firmware/requirements.txt
+
+      - run: ./build.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: firmware
+          path: build/*.uf2
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: firmware
+          path: dist
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          uf2="dist/charybdis-3x5-splinky3-jigfox-${GITHUB_REF_NAME}.uf2"
+          mv dist/*.uf2 "$uf2"
+          gh release create "$GITHUB_REF_NAME" "$uf2" \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
