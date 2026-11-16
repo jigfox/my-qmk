@@ -65,6 +65,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Releases made by hand (e.g. v0.0.1, the firmware read back from the keyboard) stay untouched.
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists, leaving it alone."
+            exit 0
+          fi
           uf2="dist/charybdis-3x5-splinky3-jigfox-${GITHUB_REF_NAME}.uf2"
           mv dist/*.uf2 "$uf2"
           gh release create "$GITHUB_REF_NAME" "$uf2" \
